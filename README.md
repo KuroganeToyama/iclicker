@@ -16,3 +16,7 @@ This tool is developed for CS 135 ISAs at the University of Waterloo to easily c
 
 ## Usage
 - Run `python iclicker.py` and view your downloaded files at the `DOWNLOAD_PATH` you specified.
+
+## Note
+- The tool assumes the polls are named "Class XX - Poll".
+- I'D REALLY APPRECIATE IT IF YOU CAN ENSURE THE INSTRUCTORS DO NOT DO THINGS THEIR OWN WAY AND SIMPLY STICK TO THIS POLL NAMING FORMAT. WHY CAN WE NEVER HAVE CONSISTENCY? IT'S JUST SO NICE TO HAVE CONSISTENCY.
