@@ -80,7 +80,8 @@ while True:
                 poll_button = poll_rows[j].find_element(By.TAG_NAME, 'button')
                 poll_button_text = poll_button.text.strip()
 
-                if "Poll" in poll_button_text and poll_button_text not in EXCEPTIONS:
+                # It's a poll and not a class to be skipped
+                if "Poll" in poll_button_text and poll_button_text not in EXCEPTIONS[section_button_text]:
                     poll_button.click()
                     wait_page(driver)
 
