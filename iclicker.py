@@ -9,6 +9,46 @@ import os, shutil, sys
 from config import EMAIL, PASSWORD, DOWNLOAD_PATH, EXCEPTIONS
 ICLICKER_CLOUD_LOGIN_URL = 'https://instructor.iclicker.com/#/onboard/login'
 
+## Helper functions
+
+def create_folder(path):
+    """Create a folder if it doesn't exist."""
+    try:
+        os.mkdir(path)
+    except FileExistsError:
+        print(f'ERROR: Folder "{path}" already exists.')
+        sys.exit()
+
+def move_files(src_path, dest_path, prefix):
+    """Move files with a specific prefix to a destination folder."""
+    files = os.listdir(src_path)
+    files_to_move = [file for file in files if file.startswith(prefix)]
+    for file in files_to_move:
+        src_file = os.path.join(src_path, file)
+        dest_file = os.path.join(dest_path, file)
+        if os.path.isfile(src_file):
+            shutil.move(src_file, dest_file)
+
+def export_activity(driver, button_xpath, modal_button_xpath):
+    """Export activity by clicking buttons."""
+    wait_click(driver, 'xpath', button_xpath)
+    time.sleep(2)
+    wait_click(driver, 'xpath', modal_button_xpath)
+    time.sleep(2)
+    wait_click(driver, 'xpath', modal_button_xpath.replace('[2]', ''))
+
+def handle_poll(driver, poll_button, section_name):
+    """Handle exporting polls."""
+    poll_button_text = poll_button.text.strip()
+    if "Poll" in poll_button_text and poll_button_text not in EXCEPTIONS[section_name]:
+        poll_button.click()
+        wait_page(driver)
+        export_activity(driver, 
+                        '/html/body/app-root/div/app-admin/div/div/app-course/main/app-class-history/app-activity/div/div/div[1]/div[1]/button',
+                        '/html/body/app-root/div/app-modals-injection/app-activity-export-modal/sui-modal/div/div/div/div/form/div[3]/button[2]')
+        driver.back()
+        time.sleep(3)
+
 ## Main code
 
 # Open up Google Chrome
@@ -42,28 +82,17 @@ while True:
         section_rows = section_table.find_elements(By.TAG_NAME, 'tr')
 
         section_button = section_rows[i].find_element(By.TAG_NAME, 'button')
-
         section_button_text = section_button.text.strip()
         section_folder_path = f"{DOWNLOAD_PATH}/{section_button_text}"
 
-        try:
-            os.mkdir(section_folder_path)
-        except:
-            print(f'ERROR: Folder "{section_button_text}" already exists in {DOWNLOAD_PATH}')
-            sys.exit()
-
+        create_folder(section_folder_path)
         section_button.click()
         wait_page(driver)
 
-        # Export all activites
-        wait_click(driver, 'xpath', '/html/body/app-root/div/app-admin/div/div/app-course/main/app-class-history/app-activity-list/div/div[1]/div[2]/button[2]')
-        time.sleep(2)
-
-        wait_click(driver, 'xpath', '/html/body/app-root/div/app-modals-injection/app-activity-history-export-modal/sui-modal/div/div/div/div/form/div[3]/button[2]')
-        time.sleep(2)
-
-        wait_click(driver, 'xpath', '/html/body/app-root/div/app-modals-injection/app-activity-history-export-modal/sui-modal/div/div/div/div/form/div[3]/button')
-        time.sleep(2)
+        # Export all activities
+        export_activity(driver, 
+                        '/html/body/app-root/div/app-admin/div/div/app-course/main/app-class-history/app-activity-list/div/div[1]/div[2]/button[2]',
+                        '/html/body/app-root/div/app-modals-injection/app-activity-history-export-modal/sui-modal/div/div/div/div/form/div[3]/button[2]')
 
         # Export polls
         poll_table_locator = (By.XPATH, '/html/body/app-root/div/app-admin/div/div/app-course/main/app-class-history/app-activity-list/div/div[2]/div/app-list/div/table/tbody')
@@ -78,39 +107,12 @@ while True:
                 poll_rows = poll_table.find_elements(By.CLASS_NAME, 'secondaryRow')
 
                 poll_button = poll_rows[j].find_element(By.TAG_NAME, 'button')
-                poll_button_text = poll_button.text.strip()
-
-                # It's a poll and not a class to be skipped
-                if "Poll" in poll_button_text and poll_button_text not in EXCEPTIONS[section_button_text]:
-                    poll_button.click()
-                    wait_page(driver)
-
-                    wait_click(driver, 'xpath', '/html/body/app-root/div/app-admin/div/div/app-course/main/app-class-history/app-activity/div/div/div[1]/div[1]/button')
-                    wait_page(driver)
-
-                    wait_click(driver, 'xpath', '/html/body/app-root/div/app-admin/div/div/app-course/main/app-class-history/app-activity/div/div/div[1]/div[2]/li[1]/button')
-                    time.sleep(2)
-
-                    wait_click(driver, 'xpath', '/html/body/app-root/div/app-modals-injection/app-activity-export-modal/sui-modal/div/div/div/div/form/div[3]/button[2]')
-                    time.sleep(2)
-
-                    wait_click(driver, 'xpath', '/html/body/app-root/div/app-modals-injection/app-activity-export-modal/sui-modal/div/div/div/div/form/div[3]/button')
-                    wait_page(driver)
-
-                    # Go back to table of polls
-                    driver.back()
-                    time.sleep(3)
+                handle_poll(driver, poll_button, section_button_text)
             
             break
 
         # Move all downloaded files to corresponding section folder
-        files = os.listdir(DOWNLOAD_PATH)
-        files_to_move = [file for file in files if file.startswith('iClicker_')]
-        for file in files_to_move:
-            src_file = os.path.join(DOWNLOAD_PATH, file)
-            dest_file = os.path.join(section_folder_path, file)
-            if os.path.isfile(src_file):
-                shutil.move(src_file, dest_file)
+        move_files(DOWNLOAD_PATH, section_folder_path, 'iClicker_')
 
         # Go back to table of sections
         driver.back()

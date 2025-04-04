@@ -1,7 +1,9 @@
 # Email address to login to iClicker Cloud
+# Example: EMAIL = 'your_email@example.com'
 EMAIL = ''
 
 # Password to login to iClicker Cloud
+# Example: PASSWORD = 'your_password'
 PASSWORD = ''
 
 # The full path to your Downloads folder, or whichever folder that stores the downloaded files 

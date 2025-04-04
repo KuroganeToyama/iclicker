@@ -2,6 +2,11 @@ from delays import wait_click, wait_page
 from forms import field_entry
 from selenium.webdriver.remote.webdriver import WebDriver
 
+# Function to log in to the application.
+# Parameters:
+# driver: WebDriver instance to interact with the browser.
+# username: User's email address.
+# password: User's password.
 def login(driver: WebDriver, username: str, password: str):
     field_entry(driver, 'id', 'email', username)
     field_entry(driver, 'id', 'password', password)
